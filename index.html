@@ -324,11 +324,12 @@ function showTab(name, btn) {
 function renderPrices(list) {
   const grid = document.getElementById("repairGrid");
   if (!list || !list.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888">לא נמצאו פריטים</div>'; return; }
+  const showPrice = (user.role || "").trim() !== "עובדת";
   grid.innerHTML = "";
   list.forEach(item => {
     const btn = document.createElement("button");
     btn.className = "repair-btn";
-    btn.innerHTML = `<div class="r-name">${item.name}</div>${item.price ? `<div class="r-price">₪${item.price}</div>` : ""}`;
+    btn.innerHTML = `<div class="r-name">${item.name}</div>${showPrice && item.price ? `<div class="r-price">₪${item.price}</div>` : ""}`;
     btn.onclick = () => doRepair(item);
     grid.appendChild(btn);
   });
@@ -383,13 +384,14 @@ async function loadMyLog() {
   try {
     const rows = await api({ action: "getMyLog", worker: user.name });
     if (!rows || !rows.length) { cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888">אין פעולות רשומות עדיין</div>'; return; }
-    let html = '<div class="tbl-wrap"><table><tr><th>תאריך</th><th>תיקון</th><th>מחיר</th><th></th></tr>';
+    const showPrice = (user.role || "").trim() !== "עובדת";
+    let html = '<div class="tbl-wrap"><table><tr><th>תאריך</th><th>תיקון</th>' + (showPrice ? '<th>מחיר</th>' : '') + '<th></th></tr>';
     rows.forEach(r => {
       const date = r[0]||"", repair = r[3]||"", price = r[4]||"", rowNum = r[5]||"";
       html += `<tr>
         <td>${date}</td>
         <td>${repair}</td>
-        <td>${price ? "₪"+price : ""}</td>
+        ${showPrice ? `<td>${price ? "₪"+price : ""}</td>` : ""}
         <td><button class="btn-del" onclick="doDeleteLog(${rowNum},'${repair.replace(/'/g,"\\'")}')">🗑️</button></td>
       </tr>`;
     });
