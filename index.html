@@ -385,12 +385,12 @@ async function loadMyLog() {
     if (!rows || !rows.length) { cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888">אין פעולות רשומות עדיין</div>'; return; }
     let html = '<div class="tbl-wrap"><table><tr><th>תאריך</th><th>תיקון</th><th>מחיר</th><th></th></tr>';
     rows.forEach(r => {
-      const date = r[0]||"", repair = r[3]||"", price = r[4]||"";
+      const date = r[0]||"", repair = r[3]||"", price = r[4]||"", rowNum = r[5]||"";
       html += `<tr>
         <td>${date}</td>
         <td>${repair}</td>
         <td>${price ? "₪"+price : ""}</td>
-        <td><button class="btn-del" onclick="doDeleteLog('${date.replace(/'/g,"\\'")}','${repair.replace(/'/g,"\\'")}')">🗑️</button></td>
+        <td><button class="btn-del" onclick="doDeleteLog(${rowNum},'${repair.replace(/'/g,"\\'")}')">🗑️</button></td>
       </tr>`;
     });
     html += "</table></div>";
@@ -398,12 +398,12 @@ async function loadMyLog() {
   } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאת חיבור</div>'; }
 }
 
-async function doDeleteLog(date, repair) {
+async function doDeleteLog(rowNum, repair) {
   if (!confirm(`למחוק את הרישום "${repair}"?`)) return;
   try {
-    const res = await api({ action: "deleteLog", date, worker: user.name, repair });
-    if (res.ok) loadMyLog();
-    else alert("לא נמצא הרישום");
+    const res = await api({ action: "deleteLog", rowNum });
+    if (res.ok) { myLogLoaded = false; loadMyLog(); }
+    else alert("שגיאה במחיקה");
   } catch(e) { alert("שגיאה במחיקה"); }
 }
 
