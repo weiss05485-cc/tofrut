@@ -211,6 +211,9 @@ const API = "https://script.google.com/macros/s/AKfycbwWxWichDcZTwSHkuGSvV4FCM1k
 
 let user = null;
 let allLogData = [];
+let myLogLoaded = false;
+let statsLoaded = false;
+let staffLoaded = false;
 
 async function api(params) {
   const res = await fetch(API + "?" + new URLSearchParams(params));
@@ -229,17 +232,19 @@ function cacheGet(key) {
   return null;
 }
 
-// --- טעינת שמות ---
+// --- טעינת שמות + pre-warm ---
 window.onload = async function() {
   const sel = document.getElementById("selName");
+  // הצג מ-cache מיד
   const cached = cacheGet("staffNames");
   if (cached) {
     sel.innerHTML = '<option value="">-- בחרי שם --</option>';
     cached.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
   }
+  // רענן ברקע — זה גם "מעיר" את Apps Script לפני הכניסה
   try {
     const names = await api({ action: "getStaff" });
-    cacheSet("staffNames", names, 60);
+    cacheSet("staffNames", names, 120);
     sel.innerHTML = '<option value="">-- בחרי שם --</option>';
     names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
   } catch(e) {
@@ -278,7 +283,7 @@ function enterApp() {
 }
 
 function logout() {
-  user = null; allLogData = [];
+  user = null; allLogData = []; myLogLoaded = false; statsLoaded = false; staffLoaded = false;
   document.getElementById("mainScreen").style.display  = "none";
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("inpPass").value = "";
@@ -295,9 +300,9 @@ function showTab(name, btn) {
   document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
   document.getElementById("tab-" + name).classList.add("active");
   btn.classList.add("active");
-  if (name === "mylog")  loadMyLog();
-  if (name === "stats")  loadStats();
-  if (name === "manage") { loadStaffTable(); loadRepairList(); }
+  if (name === "mylog" && !myLogLoaded)  loadMyLog();
+  if (name === "stats" && !statsLoaded)  loadStats();
+  if (name === "manage" && !staffLoaded) { loadStaffTable(); loadRepairList(); }
 }
 
 // --- מחירון ---
@@ -318,31 +323,40 @@ async function loadPrices() {
   document.getElementById("priceTitle").textContent = "📋 מחירון סניף " + user.branch;
   const cacheKey = "prices_" + user.branch;
   const cached = cacheGet(cacheKey);
-  if (cached) { renderPrices(cached); } else {
-    document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888"><span class="loader"></span> טוען...</div>';
+  if (cached) {
+    renderPrices(cached);
+    // רענון שקט ברקע — לא מחכים לו
+    api({ action: "getPrices", branch: user.branch }).then(list => {
+      if (list && list.length) { cacheSet(cacheKey, list, 120); renderPrices(list); }
+    }).catch(()=>{});
+    return;
   }
+  document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888"><span class="loader"></span> טוען...</div>';
   try {
     const list = await api({ action: "getPrices", branch: user.branch });
-    cacheSet(cacheKey, list, 30);
+    cacheSet(cacheKey, list, 120);
     renderPrices(list);
   } catch(e) {
-    if (!cached) document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;color:red;padding:10px">שגיאה בטעינת מחירון</div>';
+    document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;color:red;padding:10px">שגיאה בטעינת מחירון</div>';
   }
 }
 
-async function doRepair(item) {
-  document.querySelectorAll(".repair-btn").forEach(b => { b.disabled = true; b.style.opacity = "0.6"; });
-  try {
-    await api({ action: "logRepair", branch: user.branch, worker: user.name, repair: item.name, price: item.price || "" });
-    const price = item.price ? "₪" + item.price : "";
-    document.getElementById("successMsg").innerHTML = `<div class="success-bubble"><h3>✅ נרשם בהצלחה!</h3><p>${item.name}${price ? " — " + price : ""}</p></div>`;
-    setTimeout(() => document.getElementById("successMsg").innerHTML = "", 3000);
-  } catch(e) {}
-  document.querySelectorAll(".repair-btn").forEach(b => { b.disabled = false; b.style.opacity = "1"; });
+function doRepair(item) {
+  // הצג הצלחה מיד — בלי לחכות לגוגל
+  const price = item.price ? "₪" + item.price : "";
+  document.getElementById("successMsg").innerHTML = `<div class="success-bubble"><h3>✅ נרשם בהצלחה!</h3><p>${item.name}${price ? " — " + price : ""}</p></div>`;
+  setTimeout(() => document.getElementById("successMsg").innerHTML = "", 3000);
+  myLogLoaded = false; // כדי שיומן יתרענן בפעם הבאה
+  // שלח לגוגל ברקע
+  api({ action: "logRepair", branch: user.branch, worker: user.name, repair: item.name, price: item.price || "" }).catch(() => {
+    document.getElementById("successMsg").innerHTML = '<div class="msg-err">⚠️ שגיאת חיבור — הרישום לא נשמר!</div>';
+    setTimeout(() => document.getElementById("successMsg").innerHTML = "", 4000);
+  });
 }
 
 // --- יומן אישי ---
 async function loadMyLog() {
+  myLogLoaded = true;
   const cont = document.getElementById("myLogContent");
   cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
   try {
@@ -380,6 +394,7 @@ async function loadStats() {
       buildMonthFilter();
     } catch(e) { return; }
   }
+  statsLoaded = true;
   applyFilter();
 }
 
@@ -478,6 +493,7 @@ function exportExcel() {
 
 // --- ניהול עובדות ---
 async function loadStaffTable() {
+  staffLoaded = true;
   const cont = document.getElementById("staffContent");
   cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
   try {
