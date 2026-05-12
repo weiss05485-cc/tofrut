@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>חסידים סנטר ✂️</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Heebo', sans-serif; }
 body { background: linear-gradient(145deg, #fdf8ee, #faf3df, #f5ead0); min-height: 100vh; direction: rtl; }
@@ -20,9 +21,13 @@ body { background: linear-gradient(145deg, #fdf8ee, #faf3df, #f5ead0); min-heigh
 .field select:focus, .field input:focus { border-color: #b19343; box-shadow: 0 0 0 3px rgba(177,147,67,0.15); }
 .btn-gold { width: 100%; padding: 14px; background: linear-gradient(135deg, #b19343, #d4b96a); color: white; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 16px rgba(177,147,67,0.35); font-family: 'Heebo', sans-serif; }
 .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(177,147,67,0.45); }
+.btn-green { padding: 10px 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+.btn-green:hover { transform: translateY(-1px); }
 .btn-red { padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
 .btn-red:hover { transform: translateY(-1px); }
-#mainScreen { display: none; max-width: 860px; margin: 0 auto; padding: 16px; }
+.btn-del { padding: 4px 12px; background: #fff0f0; color: #e74c3c; border: 1px solid #fcc; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.15s; }
+.btn-del:hover { background: #e74c3c; color: white; }
+#mainScreen { display: none; max-width: 900px; margin: 0 auto; padding: 16px; }
 .user-bar { background: white; border-radius: 16px; padding: 14px 18px; border-right: 5px solid #b19343; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(177,147,67,0.12); display: flex; align-items: center; justify-content: space-between; }
 .uname { font-size: 1rem; font-weight: 800; color: #3a2e0f; }
 .ubranch { font-size: 0.85rem; color: #888; margin-top: 2px; }
@@ -44,7 +49,7 @@ body { background: linear-gradient(145deg, #fdf8ee, #faf3df, #f5ead0); min-heigh
 .tbl-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #f0e4b8; }
 table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 th { background: linear-gradient(135deg, #b19343, #d4b96a); color: white; padding: 11px 14px; text-align: right; font-weight: 700; }
-td { padding: 10px 14px; border-bottom: 1px solid #f5edd8; text-align: right; color: #444; }
+td { padding: 10px 14px; border-bottom: 1px solid #f5edd8; text-align: right; color: #444; vertical-align: middle; }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: #fdf8ee; }
 .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
@@ -63,7 +68,17 @@ tr:hover td { background: #fdf8ee; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
-@media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .repair-grid { grid-template-columns: repeat(2, 1fr); } .metrics { grid-template-columns: repeat(2, 1fr); } .login-card { padding: 24px 18px; } }
+.filter-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-row select { padding: 10px 14px; border: 2px solid #e8d9a0; border-radius: 12px; font-size: 0.95rem; font-family: 'Heebo', sans-serif; outline: none; background: white; direction: rtl; }
+.filter-row select:focus { border-color: #b19343; }
+.repair-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f5edd8; }
+.repair-item:last-child { border-bottom: none; }
+.repair-item-info { font-weight: 700; color: #5a4820; font-size: 0.9rem; }
+.repair-item-price { color: #b19343; font-weight: 700; font-size: 0.9rem; }
+.inline-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.inline-form input { padding: 10px 12px; border: 2px solid #e8d9a0; border-radius: 10px; font-size: 0.9rem; font-family: 'Heebo', sans-serif; outline: none; }
+.inline-form input:focus { border-color: #b19343; }
+@media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .repair-grid { grid-template-columns: repeat(2, 1fr); } .metrics { grid-template-columns: repeat(2, 1fr); } .login-card { padding: 24px 18px; } .filter-row { gap: 8px; } }
 </style>
 </head>
 <body>
@@ -104,10 +119,11 @@ tr:hover td { background: #fdf8ee; }
   <div class="tabs">
     <button class="tab-btn active" onclick="showTab('report',this)">📝 דיווח</button>
     <button class="tab-btn" onclick="showTab('mylog',this)">📜 יומן שלי</button>
-    <button class="tab-btn mgr acct" onclick="showTab('stats',this)" style="display:none">📊 דוחות</button>
+    <button class="tab-btn mgr" onclick="showTab('stats',this)" style="display:none">📊 דוחות</button>
     <button class="tab-btn mgr" onclick="showTab('manage',this)" style="display:none">⚙️ ניהול</button>
   </div>
 
+  <!-- דיווח -->
   <div id="tab-report" class="tab-content active">
     <div id="successMsg"></div>
     <div class="card">
@@ -118,6 +134,7 @@ tr:hover td { background: #fdf8ee; }
     </div>
   </div>
 
+  <!-- יומן אישי -->
   <div id="tab-mylog" class="tab-content">
     <div class="card">
       <div class="card-title">📜 הפעולות האחרונות שלי</div>
@@ -125,7 +142,14 @@ tr:hover td { background: #fdf8ee; }
     </div>
   </div>
 
+  <!-- דוחות -->
   <div id="tab-stats" class="tab-content">
+    <div class="filter-row">
+      <select id="monthFilter" onchange="applyFilter()">
+        <option value="">כל החודשים</option>
+      </select>
+      <button class="btn-green" onclick="exportExcel()">📥 ייצוא Excel</button>
+    </div>
     <div class="metrics">
       <div class="metric-card"><div class="m-val" id="mTotal">-</div><div class="m-lbl">💰 סה"כ הכנסות</div></div>
       <div class="metric-card"><div class="m-val" id="mCount">-</div><div class="m-lbl">📋 מספר פעולות</div></div>
@@ -138,8 +162,10 @@ tr:hover td { background: #fdf8ee; }
     <div class="card"><div class="card-title">📋 יומן כללי</div><div id="allLogContent"></div></div>
   </div>
 
+  <!-- ניהול -->
   <div id="tab-manage" class="tab-content">
     <div class="two-col">
+      <!-- הוספת עובדת -->
       <div class="card">
         <div class="card-title">👤 הוספת עובדת</div>
         <div id="addMsg"></div>
@@ -149,29 +175,49 @@ tr:hover td { background: #fdf8ee; }
         <div class="field"><label>תפקיד:</label><select id="nRole"><option value="עובדת">עובדת</option><option value="ניהול">ניהול</option><option value="הנהלת חשבונות">הנהלת חשבונות</option></select></div>
         <button class="btn-gold" onclick="doAddWorker()">➕ הוספה</button>
       </div>
+      <!-- רשימת צוות -->
       <div class="card">
         <div class="card-title">📋 רשימת הצוות</div>
         <div id="staffContent"><div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div></div>
       </div>
     </div>
+
+    <!-- ניהול מחירון -->
+    <div class="card">
+      <div class="card-title">🔧 ניהול מחירון תיקונים</div>
+      <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="font-weight:700;color:#555;">סניף:</label>
+        <select id="priceBranch" onchange="loadRepairList()" style="padding:10px 14px;border:2px solid #e8d9a0;border-radius:12px;font-family:'Heebo',sans-serif;font-size:0.95rem;outline:none;">
+          <option value="ירושלים">ירושלים</option>
+          <option value="בני ברק">בני ברק</option>
+        </select>
+      </div>
+      <div id="repairMsgManage"></div>
+      <div style="margin-bottom:14px">
+        <div style="font-weight:700;color:#555;margin-bottom:8px;font-size:0.9rem;">➕ הוספת תיקון חדש:</div>
+        <div class="inline-form">
+          <input type="text" id="rName" placeholder="שם התיקון" style="flex:2;min-width:140px;">
+          <input type="number" id="rPrice" placeholder="מחיר ₪" style="flex:1;min-width:90px;">
+          <button class="btn-gold" style="width:auto;padding:10px 20px;font-size:0.9rem;" onclick="doAddRepair()">➕ הוסף</button>
+        </div>
+      </div>
+      <div id="repairListManage"><div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div></div>
+    </div>
   </div>
 </div>
 
 <script>
-// ======================================================
-//  שים כאן את ה-URL של ה-Apps Script שלך
-// ======================================================
 const API = "https://script.google.com/macros/s/AKfycbwWxWichDcZTwSHkuGSvV4FCM1kwJ3CbFF825RNGrp7h9rpiZVRBgORKkscXaMWvlE5/exec";
-// ======================================================
 
 let user = null;
+let allLogData = [];
 
 async function api(params) {
   const res = await fetch(API + "?" + new URLSearchParams(params));
   return res.json();
 }
 
-// --- Cache helpers ---
+// --- Cache ---
 function cacheSet(key, data, ttlMinutes) {
   localStorage.setItem(key, JSON.stringify({ data, expires: Date.now() + ttlMinutes * 60000 }));
 }
@@ -183,18 +229,17 @@ function cacheGet(key) {
   return null;
 }
 
+// --- טעינת שמות ---
 window.onload = async function() {
   const sel = document.getElementById("selName");
-  // הצג מהcache מיד
   const cached = cacheGet("staffNames");
   if (cached) {
     sel.innerHTML = '<option value="">-- בחרי שם --</option>';
     cached.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
   }
-  // רענן ברקע
   try {
     const names = await api({ action: "getStaff" });
-    cacheSet("staffNames", names, 60); // שמור שעה
+    cacheSet("staffNames", names, 60);
     sel.innerHTML = '<option value="">-- בחרי שם --</option>';
     names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
   } catch(e) {
@@ -202,6 +247,7 @@ window.onload = async function() {
   }
 };
 
+// --- כניסה ---
 async function doLogin() {
   const name = document.getElementById("selName").value;
   const pass = document.getElementById("inpPass").value;
@@ -222,14 +268,15 @@ function enterApp() {
   document.getElementById("uName").textContent   = "שלום, " + user.name + " 👋";
   document.getElementById("uBranch").textContent = "📍 סניף " + user.branch;
   const role = (user.role || "").trim();
-  alert("DEBUG role: [" + role + "] length:" + role.length);
-  document.getElementById("uRole").textContent   = role === "ניהול" ? "מנהלת" : role === "הנהלת חשבונות" ? "הנהלת חשבונות" : "עובדת";
-  if (role === "ניהול" || role === "הנהלת חשבונות") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
+  document.getElementById("uRole").textContent = role === "ניהול" ? "מנהלת" : role === "הנהלת חשבונות" ? "הנה\"ח" : "עובדת";
+  if (role === "ניהול" || role === "הנהלת חשבונות") {
+    document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
+  }
   loadPrices();
 }
 
 function logout() {
-  user = null;
+  user = null; allLogData = [];
   document.getElementById("mainScreen").style.display  = "none";
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("inpPass").value = "";
@@ -238,6 +285,7 @@ function logout() {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
   document.getElementById("tab-report").classList.add("active");
   document.querySelectorAll(".tab-btn").forEach((b,i) => b.classList.toggle("active", i===0));
+  document.querySelectorAll(".mgr").forEach(el => el.style.display = "none");
 }
 
 function showTab(name, btn) {
@@ -247,9 +295,10 @@ function showTab(name, btn) {
   btn.classList.add("active");
   if (name === "mylog")  loadMyLog();
   if (name === "stats")  loadStats();
-  if (name === "manage") loadStaffTable();
+  if (name === "manage") { loadStaffTable(); loadRepairList(); }
 }
 
+// --- מחירון ---
 function renderPrices(list) {
   const grid = document.getElementById("repairGrid");
   if (!list || !list.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888">לא נמצאו פריטים</div>'; return; }
@@ -266,17 +315,13 @@ function renderPrices(list) {
 async function loadPrices() {
   document.getElementById("priceTitle").textContent = "📋 מחירון סניף " + user.branch;
   const cacheKey = "prices_" + user.branch;
-  // הצג מהcache מיד — ללא המתנה
   const cached = cacheGet(cacheKey);
-  if (cached) {
-    renderPrices(cached);
-  } else {
+  if (cached) { renderPrices(cached); } else {
     document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888"><span class="loader"></span> טוען...</div>';
   }
-  // רענן ברקע
   try {
     const list = await api({ action: "getPrices", branch: user.branch });
-    cacheSet(cacheKey, list, 30); // שמור 30 דקות
+    cacheSet(cacheKey, list, 30);
     renderPrices(list);
   } catch(e) {
     if (!cached) document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;color:red;padding:10px">שגיאה בטעינת מחירון</div>';
@@ -294,6 +339,7 @@ async function doRepair(item) {
   document.querySelectorAll(".repair-btn").forEach(b => { b.disabled = false; b.style.opacity = "1"; });
 }
 
+// --- יומן אישי ---
 async function loadMyLog() {
   const cont = document.getElementById("myLogContent");
   cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
@@ -305,19 +351,66 @@ async function loadMyLog() {
   } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאת חיבור</div>'; }
 }
 
+// --- דוחות ---
 async function loadStats() {
-  try {
-    const rows = await api({ action: "getAllLog" });
-    if (!rows || !rows.length) return;
-    let total = 0, wMap = {}, bMap = {};
-    rows.forEach(r => { const p = parseFloat(r[4])||0; total+=p; wMap[r[2]]=(wMap[r[2]]||0)+p; bMap[r[1]]=(bMap[r[1]]||0)+p; });
-    document.getElementById("mTotal").textContent = "₪" + total.toLocaleString();
-    document.getElementById("mCount").textContent = rows.length;
-    document.getElementById("mTop").textContent = Object.keys(wMap).sort((a,b)=>wMap[b]-wMap[a])[0]||"-";
-    renderBar("chartWorker", wMap);
-    renderBar("chartBranch", bMap);
-    document.getElementById("allLogContent").innerHTML = '<div class="tbl-wrap">' + buildTable(["תאריך","סניף","תופרת","תיקון","מחיר"], rows.slice(0,50)) + "</div>";
-  } catch(e) {}
+  if (allLogData.length === 0) {
+    try {
+      allLogData = await api({ action: "getAllLog" }) || [];
+      buildMonthFilter();
+    } catch(e) { return; }
+  }
+  applyFilter();
+}
+
+function buildMonthFilter() {
+  const months = new Set();
+  allLogData.forEach(r => {
+    const d = String(r[0]);
+    if (d.length >= 7) {
+      const parts = d.split("/");
+      if (parts.length >= 3) months.add(parts[1] + "/" + parts[2].substring(0,4));
+    }
+  });
+  const sel = document.getElementById("monthFilter");
+  sel.innerHTML = '<option value="">כל החודשים</option>';
+  const monthNames = ["","ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+  [...months].sort((a,b) => {
+    const [ma,ya] = a.split("/"); const [mb,yb] = b.split("/");
+    return (yb-ya) || (mb-ma);
+  }).forEach(m => {
+    const [mm, yy] = m.split("/");
+    const label = (monthNames[parseInt(mm)] || mm) + " " + yy;
+    sel.innerHTML += `<option value="${m}">${label}</option>`;
+  });
+}
+
+function applyFilter() {
+  const sel = document.getElementById("monthFilter").value;
+  const rows = sel ? allLogData.filter(r => {
+    const d = String(r[0]);
+    const parts = d.split("/");
+    if (parts.length < 3) return false;
+    return (parts[1] + "/" + parts[2].substring(0,4)) === sel;
+  }) : allLogData;
+
+  if (!rows.length) {
+    document.getElementById("mTotal").textContent = "₪0";
+    document.getElementById("mCount").textContent = "0";
+    document.getElementById("mTop").textContent = "-";
+    document.getElementById("chartWorker").innerHTML = "";
+    document.getElementById("chartBranch").innerHTML = "";
+    document.getElementById("allLogContent").innerHTML = '<div style="text-align:center;padding:20px;color:#888">אין נתונים</div>';
+    return;
+  }
+
+  let total = 0, wMap = {}, bMap = {};
+  rows.forEach(r => { const p = parseFloat(r[4])||0; total+=p; wMap[r[2]]=(wMap[r[2]]||0)+p; bMap[r[1]]=(bMap[r[1]]||0)+p; });
+  document.getElementById("mTotal").textContent = "₪" + total.toLocaleString();
+  document.getElementById("mCount").textContent = rows.length;
+  document.getElementById("mTop").textContent = Object.keys(wMap).sort((a,b)=>wMap[b]-wMap[a])[0]||"-";
+  renderBar("chartWorker", wMap);
+  renderBar("chartBranch", bMap);
+  document.getElementById("allLogContent").innerHTML = '<div class="tbl-wrap">' + buildTable(["תאריך","סניף","תופרת","תיקון","מחיר"], rows.slice(0,100)) + "</div>";
 }
 
 function renderBar(id, data) {
@@ -328,15 +421,54 @@ function renderBar(id, data) {
   ).join("");
 }
 
+// --- ייצוא Excel ---
+function exportExcel() {
+  const sel = document.getElementById("monthFilter").value;
+  const rows = sel ? allLogData.filter(r => {
+    const parts = String(r[0]).split("/");
+    return parts.length >= 3 && (parts[1] + "/" + parts[2].substring(0,4)) === sel;
+  }) : allLogData;
+
+  if (!rows.length) { alert("אין נתונים לייצוא"); return; }
+
+  // גיליון 1 — כל הנתונים
+  const wsData = [["תאריך","סניף","תופרת","תיקון","מחיר"]].concat(rows.map(r => [r[0],r[1],r[2],r[3],parseFloat(r[4])||0]));
+  const ws1 = XLSX.utils.aoa_to_sheet(wsData);
+
+  // גיליון 2 — סיכום לפי תופרת
+  const wMap = {};
+  rows.forEach(r => { const p = parseFloat(r[4])||0; wMap[r[2]]=(wMap[r[2]]||0)+p; });
+  const sumData = [["תופרת","סה\"כ הכנסות","מספר פעולות"]];
+  const cntMap = {};
+  rows.forEach(r => { cntMap[r[2]]=(cntMap[r[2]]||0)+1; });
+  Object.keys(wMap).sort((a,b)=>wMap[b]-wMap[a]).forEach(k => sumData.push([k, wMap[k], cntMap[k]]));
+  sumData.push(["", "", ""]);
+  sumData.push(["סה\"כ", rows.reduce((s,r)=>s+(parseFloat(r[4])||0),0), rows.length]);
+  const ws2 = XLSX.utils.aoa_to_sheet(sumData);
+
+  const monthNames = {"01":"ינואר","02":"פברואר","03":"מרץ","04":"אפריל","05":"מאי","06":"יוני","07":"יולי","08":"אוגוסט","09":"ספטמבר","10":"אוקטובר","11":"נובמבר","12":"דצמבר"};
+  const label = sel ? (monthNames[sel.split("/")[0]] + "_" + sel.split("/")[1]) : "כל_התקופה";
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, "פירוט");
+  XLSX.utils.book_append_sheet(wb, ws2, "סיכום לפי תופרת");
+  XLSX.writeFile(wb, `חסידים_סנטר_${label}.xlsx`);
+}
+
+// --- ניהול עובדות ---
 async function loadStaffTable() {
   const cont = document.getElementById("staffContent");
   cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
   try {
     const rows = await api({ action: "getStaff2" });
-    cont.innerHTML = rows && rows.length
-      ? '<div class="tbl-wrap">' + buildTable(["סניף","שם","תפקיד"], rows.map(r=>[r.branch,r.name,r.role])) + "</div>"
-      : '<div style="padding:10px;color:#888">אין עובדות</div>';
-  } catch(e) {}
+    if (!rows || !rows.length) { cont.innerHTML = '<div style="padding:10px;color:#888">אין עובדות</div>'; return; }
+    let html = '<div class="tbl-wrap"><table><tr><th>סניף</th><th>שם</th><th>תפקיד</th><th></th></tr>';
+    rows.forEach(r => {
+      html += `<tr><td>${r.branch}</td><td>${r.name}</td><td>${r.role}</td><td><button class="btn-del" onclick="doDeleteWorker('${r.name.replace(/'/g,"\\'")}')">🗑️</button></td></tr>`;
+    });
+    html += "</table></div>";
+    cont.innerHTML = html;
+  } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאה</div>'; }
 }
 
 async function doAddWorker() {
@@ -347,10 +479,72 @@ async function doAddWorker() {
   msg.innerHTML='<div style="color:#888"><span class="loader"></span> שומר...</div>';
   try {
     await api({ action:"addWorker", branch, name, pass, role });
-    msg.innerHTML='<div class="msg-ok">✅ העובדת נוספה בהצלחה!</div>';
+    msg.innerHTML='<div class="msg-ok">✅ העובדת נוספה!</div>';
     document.getElementById("nName").value=""; document.getElementById("nPass").value="";
-    loadStaffTable(); setTimeout(()=>msg.innerHTML="",3000);
+    localStorage.removeItem("staffNames");
+    loadStaffTable();
+    setTimeout(()=>msg.innerHTML="",3000);
   } catch(e) { msg.innerHTML='<div class="msg-err">שגיאה</div>'; }
+}
+
+async function doDeleteWorker(name) {
+  if (!confirm(`למחוק את ${name}?`)) return;
+  try {
+    await api({ action: "deleteWorker", name });
+    localStorage.removeItem("staffNames");
+    loadStaffTable();
+  } catch(e) { alert("שגיאה במחיקה"); }
+}
+
+// --- ניהול מחירון ---
+async function loadRepairList() {
+  const branch = document.getElementById("priceBranch").value;
+  const cont = document.getElementById("repairListManage");
+  cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
+  try {
+    const list = await api({ action: "getPrices", branch });
+    if (!list || !list.length) { cont.innerHTML = '<div style="padding:10px;color:#888">אין תיקונים ברשימה</div>'; return; }
+    let html = '<div style="border:1px solid #f0e4b8;border-radius:12px;overflow:hidden;">';
+    list.forEach(item => {
+      html += `<div class="repair-item">
+        <div><span class="repair-item-info">${item.name}</span></div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="repair-item-price">${item.price ? "₪"+item.price : ""}</span>
+          <button class="btn-del" onclick="doDeleteRepair('${item.name.replace(/'/g,"\\'")}')">🗑️</button>
+        </div>
+      </div>`;
+    });
+    html += "</div>";
+    cont.innerHTML = html;
+  } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאה בטעינה</div>'; }
+}
+
+async function doAddRepair() {
+  const branch = document.getElementById("priceBranch").value;
+  const name = document.getElementById("rName").value.trim();
+  const price = document.getElementById("rPrice").value.trim();
+  const msg = document.getElementById("repairMsgManage");
+  if (!name) { msg.innerHTML = '<div class="msg-err">נא להכניס שם תיקון</div>'; return; }
+  msg.innerHTML = '<div style="color:#888"><span class="loader"></span> שומר...</div>';
+  try {
+    await api({ action: "addRepair", branch, name, price });
+    msg.innerHTML = '<div class="msg-ok">✅ התיקון נוסף!</div>';
+    document.getElementById("rName").value = "";
+    document.getElementById("rPrice").value = "";
+    localStorage.removeItem("prices_" + branch);
+    loadRepairList();
+    setTimeout(() => msg.innerHTML = "", 3000);
+  } catch(e) { msg.innerHTML = '<div class="msg-err">שגיאה</div>'; }
+}
+
+async function doDeleteRepair(name) {
+  const branch = document.getElementById("priceBranch").value;
+  if (!confirm(`למחוק את "${name}" מהמחירון?`)) return;
+  try {
+    await api({ action: "deleteRepair", branch, name });
+    localStorage.removeItem("prices_" + branch);
+    loadRepairList();
+  } catch(e) { alert("שגיאה במחיקה"); }
 }
 
 function buildTable(headers, rows) {
