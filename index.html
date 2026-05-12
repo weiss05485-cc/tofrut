@@ -171,13 +171,35 @@ async function api(params) {
   return res.json();
 }
 
+// --- Cache helpers ---
+function cacheSet(key, data, ttlMinutes) {
+  localStorage.setItem(key, JSON.stringify({ data, expires: Date.now() + ttlMinutes * 60000 }));
+}
+function cacheGet(key) {
+  try {
+    const item = JSON.parse(localStorage.getItem(key));
+    if (item && Date.now() < item.expires) return item.data;
+  } catch(e) {}
+  return null;
+}
+
 window.onload = async function() {
+  const sel = document.getElementById("selName");
+  // הצג מהcache מיד
+  const cached = cacheGet("staffNames");
+  if (cached) {
+    sel.innerHTML = '<option value="">-- בחרי שם --</option>';
+    cached.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
+  }
+  // רענן ברקע
   try {
     const names = await api({ action: "getStaff" });
-    const sel = document.getElementById("selName");
+    cacheSet("staffNames", names, 60); // שמור שעה
     sel.innerHTML = '<option value="">-- בחרי שם --</option>';
     names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
-  } catch(e) { document.getElementById("selName").innerHTML = '<option value="">שגיאת חיבור</option>'; }
+  } catch(e) {
+    if (!cached) sel.innerHTML = '<option value="">שגיאת חיבור</option>';
+  }
 };
 
 async function doLogin() {
@@ -227,22 +249,37 @@ function showTab(name, btn) {
   if (name === "manage") loadStaffTable();
 }
 
+function renderPrices(list) {
+  const grid = document.getElementById("repairGrid");
+  if (!list || !list.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888">לא נמצאו פריטים</div>'; return; }
+  grid.innerHTML = "";
+  list.forEach(item => {
+    const btn = document.createElement("button");
+    btn.className = "repair-btn";
+    btn.innerHTML = `<div class="r-name">${item.name}</div>${item.price ? `<div class="r-price">₪${item.price}</div>` : ""}`;
+    btn.onclick = () => doRepair(item);
+    grid.appendChild(btn);
+  });
+}
+
 async function loadPrices() {
   document.getElementById("priceTitle").textContent = "📋 מחירון סניף " + user.branch;
-  document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888"><span class="loader"></span> טוען...</div>';
+  const cacheKey = "prices_" + user.branch;
+  // הצג מהcache מיד — ללא המתנה
+  const cached = cacheGet(cacheKey);
+  if (cached) {
+    renderPrices(cached);
+  } else {
+    document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888"><span class="loader"></span> טוען...</div>';
+  }
+  // רענן ברקע
   try {
     const list = await api({ action: "getPrices", branch: user.branch });
-    const grid = document.getElementById("repairGrid");
-    if (!list || !list.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888">לא נמצאו פריטים</div>'; return; }
-    grid.innerHTML = "";
-    list.forEach(item => {
-      const btn = document.createElement("button");
-      btn.className = "repair-btn";
-      btn.innerHTML = `<div class="r-name">${item.name}</div>${item.price ? `<div class="r-price">₪${item.price}</div>` : ""}`;
-      btn.onclick = () => doRepair(item);
-      grid.appendChild(btn);
-    });
-  } catch(e) { document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;color:red;padding:10px">שגיאה בטעינת מחירון</div>'; }
+    cacheSet(cacheKey, list, 30); // שמור 30 דקות
+    renderPrices(list);
+  } catch(e) {
+    if (!cached) document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;color:red;padding:10px">שגיאה בטעינת מחירון</div>';
+  }
 }
 
 async function doRepair(item) {
