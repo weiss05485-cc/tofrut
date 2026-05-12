@@ -221,9 +221,10 @@ function enterApp() {
   document.getElementById("mainScreen").style.display  = "block";
   document.getElementById("uName").textContent   = "שלום, " + user.name + " 👋";
   document.getElementById("uBranch").textContent = "📍 סניף " + user.branch;
-  document.getElementById("uRole").textContent   = user.role === "ניהול" ? "מנהלת" : user.role === "הנהלת חשבונות" ? "הנהלת חשבונות" : "עובדת";
-  if (user.role === "ניהול") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
-  if (user.role === "הנהלת חשבונות") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
+  const role = (user.role || "").trim();
+  alert("DEBUG role: [" + role + "] length:" + role.length);
+  document.getElementById("uRole").textContent   = role === "ניהול" ? "מנהלת" : role === "הנהלת חשבונות" ? "הנהלת חשבונות" : "עובדת";
+  if (role === "ניהול" || role === "הנהלת חשבונות") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
   loadPrices();
 }
 
