@@ -269,6 +269,8 @@ function enterApp() {
   document.getElementById("uBranch").textContent = "📍 סניף " + user.branch;
   const role = (user.role || "").trim();
   document.getElementById("uRole").textContent = role === "ניהול" ? "מנהלת" : role === "הנהלת חשבונות" ? "הנה\"ח" : "עובדת";
+  // הסתר תמיד קודם, הצג רק למי שצריך
+  document.querySelectorAll(".mgr").forEach(el => el.style.display = "none");
   if (role === "ניהול" || role === "הנהלת חשבונות") {
     document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
   }
@@ -345,10 +347,29 @@ async function loadMyLog() {
   cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
   try {
     const rows = await api({ action: "getMyLog", worker: user.name });
-    cont.innerHTML = rows && rows.length
-      ? '<div class="tbl-wrap">' + buildTable(["תאריך","סניף","שם","תיקון","מחיר"], rows) + "</div>"
-      : '<div style="text-align:center;padding:20px;color:#888">אין פעולות רשומות עדיין</div>';
+    if (!rows || !rows.length) { cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888">אין פעולות רשומות עדיין</div>'; return; }
+    let html = '<div class="tbl-wrap"><table><tr><th>תאריך</th><th>תיקון</th><th>מחיר</th><th></th></tr>';
+    rows.forEach(r => {
+      const date = r[0]||"", repair = r[3]||"", price = r[4]||"";
+      html += `<tr>
+        <td>${date}</td>
+        <td>${repair}</td>
+        <td>${price ? "₪"+price : ""}</td>
+        <td><button class="btn-del" onclick="doDeleteLog('${date.replace(/'/g,"\\'")}','${repair.replace(/'/g,"\\'")}')">🗑️</button></td>
+      </tr>`;
+    });
+    html += "</table></div>";
+    cont.innerHTML = html;
   } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאת חיבור</div>'; }
+}
+
+async function doDeleteLog(date, repair) {
+  if (!confirm(`למחוק את הרישום "${repair}"?`)) return;
+  try {
+    const res = await api({ action: "deleteLog", date, worker: user.name, repair });
+    if (res.ok) loadMyLog();
+    else alert("לא נמצא הרישום");
+  } catch(e) { alert("שגיאה במחיקה"); }
 }
 
 // --- דוחות ---
