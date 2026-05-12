@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>חסידים סנטר ✂️</title>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Heebo', sans-serif; }
 body { background: linear-gradient(145deg, #fdf8ee, #faf3df, #f5ead0); min-height: 100vh; direction: rtl; }
@@ -368,6 +369,8 @@ function doRepair(item) {
   document.getElementById("successMsg").innerHTML = `<div class="success-bubble"><h3>✅ נרשם בהצלחה!</h3><p>${item.name}${price ? " — " + price : ""}</p></div>`;
   setTimeout(() => document.getElementById("successMsg").innerHTML = "", 3000);
   myLogLoaded = false;
+  localStorage.removeItem("myLog_" + user.name);
+  localStorage.removeItem("allLog");
 
   // שלח לגוגל ברקע — לא מחכים
   api({ action: "logRepair", branch: user.branch, worker: user.name, repair: item.name, price: item.price || "" }).catch(() => {
@@ -377,26 +380,42 @@ function doRepair(item) {
 }
 
 // --- יומן אישי ---
+function renderMyLog(rows) {
+  const cont = document.getElementById("myLogContent");
+  if (!rows || !rows.length) { cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888">אין פעולות רשומות עדיין</div>'; return; }
+  const showPrice = (user.role || "").trim() !== "עובדת";
+  let html = '<div class="tbl-wrap"><table><tr><th>תאריך</th><th>תיקון</th>' + (showPrice ? '<th>מחיר</th>' : '') + '<th></th></tr>';
+  rows.forEach(r => {
+    const date = r[0]||"", repair = r[3]||"", price = r[4]||"", rowNum = r[5]||"";
+    html += `<tr>
+      <td>${date}</td>
+      <td>${repair}</td>
+      ${showPrice ? `<td>${price ? "₪"+price : ""}</td>` : ""}
+      <td><button class="btn-del" onclick="doDeleteLog(${rowNum},'${repair.replace(/'/g,"\\'")}')">🗑️</button></td>
+    </tr>`;
+  });
+  html += "</table></div>";
+  cont.innerHTML = html;
+}
+
 async function loadMyLog() {
   myLogLoaded = true;
   const cont = document.getElementById("myLogContent");
+  const cacheKey = "myLog_" + user.name;
+  const cached = cacheGet(cacheKey);
+  if (cached) {
+    renderMyLog(cached);
+    // רענן ברקע בשקט
+    api({ action: "getMyLog", worker: user.name }).then(rows => {
+      if (rows) { cacheSet(cacheKey, rows, 4); renderMyLog(rows); }
+    }).catch(()=>{});
+    return;
+  }
   cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
   try {
     const rows = await api({ action: "getMyLog", worker: user.name });
-    if (!rows || !rows.length) { cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888">אין פעולות רשומות עדיין</div>'; return; }
-    const showPrice = (user.role || "").trim() !== "עובדת";
-    let html = '<div class="tbl-wrap"><table><tr><th>תאריך</th><th>תיקון</th>' + (showPrice ? '<th>מחיר</th>' : '') + '<th></th></tr>';
-    rows.forEach(r => {
-      const date = r[0]||"", repair = r[3]||"", price = r[4]||"", rowNum = r[5]||"";
-      html += `<tr>
-        <td>${date}</td>
-        <td>${repair}</td>
-        ${showPrice ? `<td>${price ? "₪"+price : ""}</td>` : ""}
-        <td><button class="btn-del" onclick="doDeleteLog(${rowNum},'${repair.replace(/'/g,"\\'")}')">🗑️</button></td>
-      </tr>`;
-    });
-    html += "</table></div>";
-    cont.innerHTML = html;
+    cacheSet(cacheKey, rows, 4);
+    renderMyLog(rows);
   } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאת חיבור</div>'; }
 }
 
@@ -412,8 +431,21 @@ async function doDeleteLog(rowNum, repair) {
 // --- דוחות ---
 async function loadStats() {
   if (allLogData.length === 0) {
+    const cached = cacheGet("allLog");
+    if (cached) {
+      allLogData = cached;
+      buildMonthFilter();
+      statsLoaded = true;
+      applyFilter();
+      // רענן ברקע
+      api({ action: "getAllLog" }).then(d => {
+        if (d && d.length) { allLogData = d; cacheSet("allLog", d, 5); buildMonthFilter(); applyFilter(); }
+      }).catch(()=>{});
+      return;
+    }
     try {
       allLogData = await api({ action: "getAllLog" }) || [];
+      cacheSet("allLog", allLogData, 5);
       buildMonthFilter();
     } catch(e) { return; }
   }
@@ -482,6 +514,16 @@ function renderBar(id, data) {
 
 // --- ייצוא Excel ---
 function exportExcel() {
+  if (!window.XLSX) {
+    const s = document.createElement("script");
+    s.src = "https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js";
+    s.onload = doExport;
+    document.head.appendChild(s);
+    return;
+  }
+  doExport();
+}
+function doExport() {
   const sel = document.getElementById("monthFilter").value;
   const rows = sel ? allLogData.filter(r => {
     const parts = String(r[0]).split("/");
@@ -515,19 +557,31 @@ function exportExcel() {
 }
 
 // --- ניהול עובדות ---
+function renderStaffTable(rows) {
+  const cont = document.getElementById("staffContent");
+  if (!rows || !rows.length) { cont.innerHTML = '<div style="padding:10px;color:#888">אין עובדות</div>'; return; }
+  let html = '<div class="tbl-wrap"><table><tr><th>סניף</th><th>שם</th><th>תפקיד</th><th></th></tr>';
+  rows.forEach(r => {
+    html += `<tr><td>${r.branch}</td><td>${r.name}</td><td>${r.role}</td><td><button class="btn-del" onclick="doDeleteWorker('${r.name.replace(/'/g,"\\'")}')">🗑️</button></td></tr>`;
+  });
+  html += "</table></div>";
+  cont.innerHTML = html;
+}
+
 async function loadStaffTable() {
   staffLoaded = true;
   const cont = document.getElementById("staffContent");
+  const cached = cacheGet("staffList");
+  if (cached) {
+    renderStaffTable(cached);
+    api({ action: "getStaff2" }).then(rows => { if (rows) cacheSet("staffList", rows, 30); }).catch(()=>{});
+    return;
+  }
   cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
   try {
     const rows = await api({ action: "getStaff2" });
-    if (!rows || !rows.length) { cont.innerHTML = '<div style="padding:10px;color:#888">אין עובדות</div>'; return; }
-    let html = '<div class="tbl-wrap"><table><tr><th>סניף</th><th>שם</th><th>תפקיד</th><th></th></tr>';
-    rows.forEach(r => {
-      html += `<tr><td>${r.branch}</td><td>${r.name}</td><td>${r.role}</td><td><button class="btn-del" onclick="doDeleteWorker('${r.name.replace(/'/g,"\\'")}')">🗑️</button></td></tr>`;
-    });
-    html += "</table></div>";
-    cont.innerHTML = html;
+    cacheSet("staffList", rows, 30);
+    renderStaffTable(rows);
   } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאה</div>'; }
 }
 
@@ -542,6 +596,8 @@ async function doAddWorker() {
     msg.innerHTML='<div class="msg-ok">✅ העובדת נוספה!</div>';
     document.getElementById("nName").value=""; document.getElementById("nPass").value="";
     localStorage.removeItem("staffNames");
+    localStorage.removeItem("staffList");
+    staffLoaded = false;
     loadStaffTable();
     setTimeout(()=>msg.innerHTML="",3000);
   } catch(e) { msg.innerHTML='<div class="msg-err">שגיאה</div>'; }
@@ -552,6 +608,8 @@ async function doDeleteWorker(name) {
   try {
     await api({ action: "deleteWorker", name });
     localStorage.removeItem("staffNames");
+    localStorage.removeItem("staffList");
+    staffLoaded = false;
     loadStaffTable();
   } catch(e) { alert("שגיאה במחיקה"); }
 }
