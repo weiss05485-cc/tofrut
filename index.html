@@ -201,7 +201,7 @@ function enterApp() {
   document.getElementById("uBranch").textContent = "📍 סניף " + user.branch;
   document.getElementById("uRole").textContent   = user.role === "ניהול" ? "מנהלת" : user.role === "הנהלת חשבונות" ? "הנהלת חשבונות" : "עובדת";
   if (user.role === "ניהול") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
-  if (user.role === "הנהלת חשבונות") document.querySelectorAll(".acct").forEach(el => el.style.display = "");
+  if (user.role === "הנהלת חשבונות") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
   loadPrices();
 }
 
