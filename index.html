@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חסידים סנטר ✂️</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Heebo', sans-serif; }
+body { background: linear-gradient(145deg, #fdf8ee, #faf3df, #f5ead0); min-height: 100vh; direction: rtl; }
+.header { background: linear-gradient(135deg, #b19343, #d4b96a, #b19343); padding: 22px 20px 16px; text-align: center; box-shadow: 0 4px 20px rgba(177,147,67,0.4); position: sticky; top: 0; z-index: 100; }
+.header h1 { color: white; font-size: 1.8rem; font-weight: 900; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.header p  { color: rgba(255,255,255,0.85); font-size: 0.9rem; margin-top: 4px; }
+#loginScreen { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 80px); padding: 20px; }
+.login-card { background: white; border-radius: 24px; padding: 36px 32px; width: 100%; max-width: 420px; box-shadow: 0 8px 40px rgba(177,147,67,0.2); border: 1px solid #f0e4b8; }
+.login-card h2 { text-align: center; color: #b19343; font-size: 1.5rem; font-weight: 900; margin-bottom: 24px; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-weight: 700; color: #555; margin-bottom: 6px; font-size: 0.9rem; }
+.field select, .field input { width: 100%; padding: 12px 14px; border: 2px solid #e8d9a0; border-radius: 12px; font-size: 1rem; font-family: 'Heebo', sans-serif; outline: none; background: white; text-align: right; direction: rtl; transition: border-color 0.2s; }
+.field select:focus, .field input:focus { border-color: #b19343; box-shadow: 0 0 0 3px rgba(177,147,67,0.15); }
+.btn-gold { width: 100%; padding: 14px; background: linear-gradient(135deg, #b19343, #d4b96a); color: white; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 16px rgba(177,147,67,0.35); font-family: 'Heebo', sans-serif; }
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(177,147,67,0.45); }
+.btn-red { padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+.btn-red:hover { transform: translateY(-1px); }
+#mainScreen { display: none; max-width: 860px; margin: 0 auto; padding: 16px; }
+.user-bar { background: white; border-radius: 16px; padding: 14px 18px; border-right: 5px solid #b19343; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(177,147,67,0.12); display: flex; align-items: center; justify-content: space-between; }
+.uname { font-size: 1rem; font-weight: 800; color: #3a2e0f; }
+.ubranch { font-size: 0.85rem; color: #888; margin-top: 2px; }
+.badge { background: linear-gradient(135deg, #b19343, #d4b96a); color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+.tabs { display: flex; background: white; border-radius: 16px; padding: 6px; gap: 4px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(177,147,67,0.1); border: 1px solid #f0e4b8; overflow-x: auto; }
+.tab-btn { flex: 1; min-width: 80px; padding: 9px 12px; border: none; border-radius: 12px; background: transparent; color: #999; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.18s; font-family: 'Heebo', sans-serif; white-space: nowrap; }
+.tab-btn.active { background: linear-gradient(135deg, #b19343, #d4b96a); color: white; }
+.card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 16px rgba(177,147,67,0.1); border: 1px solid #f0e4b8; }
+.card-title { font-size: 1rem; font-weight: 800; color: #b19343; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #f0e4b8; }
+.repair-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.repair-btn { background: white; border: 2px solid #e8d9a0; border-radius: 16px; padding: 14px 8px; cursor: pointer; transition: all 0.18s; text-align: center; font-family: 'Heebo', sans-serif; box-shadow: 0 2px 8px rgba(177,147,67,0.08); }
+.repair-btn:hover { background: linear-gradient(135deg, #b19343, #d4b96a); border-color: #b19343; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(177,147,67,0.3); }
+.repair-btn:hover .r-name, .repair-btn:hover .r-price { color: white; }
+.r-name { font-weight: 800; font-size: 0.9rem; color: #5a4820; line-height: 1.3; }
+.r-price { font-size: 0.85rem; color: #b19343; font-weight: 700; margin-top: 4px; }
+.success-bubble { background: linear-gradient(135deg, #b19343, #d4b96a); color: white; padding: 20px; border-radius: 18px; text-align: center; margin-bottom: 16px; animation: popIn 0.3s ease; box-shadow: 0 6px 20px rgba(177,147,67,0.4); }
+.success-bubble h3 { font-size: 1.3rem; margin-bottom: 6px; }
+@keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.tbl-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #f0e4b8; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th { background: linear-gradient(135deg, #b19343, #d4b96a); color: white; padding: 11px 14px; text-align: right; font-weight: 700; }
+td { padding: 10px 14px; border-bottom: 1px solid #f5edd8; text-align: right; color: #444; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fdf8ee; }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.metric-card { background: white; border-radius: 16px; padding: 18px; text-align: center; border: 1px solid #f0e4b8; box-shadow: 0 2px 10px rgba(177,147,67,0.08); }
+.m-val { font-size: 1.8rem; font-weight: 900; color: #b19343; }
+.m-lbl { font-size: 0.8rem; color: #888; margin-top: 4px; }
+.bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 10px; }
+.bar-lbl { width: 100px; font-size: 0.85rem; color: #555; font-weight: 600; flex-shrink: 0; }
+.bar-wrap { flex: 1; background: #f0e4b8; border-radius: 8px; overflow: hidden; height: 28px; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, #b19343, #d4b96a); border-radius: 8px; display: flex; align-items: center; padding-right: 10px; transition: width 0.8s ease; }
+.bar-val { font-size: 0.8rem; color: white; font-weight: 700; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.msg-err { background: #ffe0e0; color: #c0392b; padding: 10px 14px; border-radius: 10px; font-weight: 600; margin-bottom: 12px; font-size: 0.9rem; }
+.msg-ok  { background: #e0f8e9; color: #27ae60; padding: 10px 14px; border-radius: 10px; font-weight: 600; margin-bottom: 12px; font-size: 0.9rem; }
+.loader { display: inline-block; width: 22px; height: 22px; border: 3px solid #f0e4b8; border-top-color: #b19343; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-left: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+@media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .repair-grid { grid-template-columns: repeat(2, 1fr); } .metrics { grid-template-columns: repeat(2, 1fr); } .login-card { padding: 24px 18px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>✂️ חסידים סנטר</h1>
+  <p>מערכת ניהול תיקוני בגדים</p>
+</div>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <h2>כניסת עובדות 👋</h2>
+    <div id="loginMsg"></div>
+    <div class="field">
+      <label>שם עובדת:</label>
+      <select id="selName"><option value="">⏳ טוען...</option></select>
+    </div>
+    <div class="field">
+      <label>סיסמה אישית:</label>
+      <input type="password" id="inpPass" placeholder="הכניסי סיסמה..." onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn-gold" onclick="doLogin()">כניסה למערכת ←</button>
+  </div>
+</div>
+
+<div id="mainScreen">
+  <div class="user-bar">
+    <div>
+      <div class="uname" id="uName"></div>
+      <div class="ubranch" id="uBranch"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span class="badge" id="uRole"></span>
+      <button class="btn-red" onclick="logout()">🚪 יציאה</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('report',this)">📝 דיווח</button>
+    <button class="tab-btn" onclick="showTab('mylog',this)">📜 יומן שלי</button>
+    <button class="tab-btn mgr" onclick="showTab('stats',this)" style="display:none">📊 דוחות</button>
+    <button class="tab-btn mgr" onclick="showTab('manage',this)" style="display:none">⚙️ ניהול</button>
+  </div>
+
+  <div id="tab-report" class="tab-content active">
+    <div id="successMsg"></div>
+    <div class="card">
+      <div class="card-title" id="priceTitle">📋 טוען מחירון...</div>
+      <div class="repair-grid" id="repairGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:20px;color:#888"><span class="loader"></span> טוען...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-mylog" class="tab-content">
+    <div class="card">
+      <div class="card-title">📜 הפעולות האחרונות שלי</div>
+      <div id="myLogContent"><div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div></div>
+    </div>
+  </div>
+
+  <div id="tab-stats" class="tab-content">
+    <div class="metrics">
+      <div class="metric-card"><div class="m-val" id="mTotal">-</div><div class="m-lbl">💰 סה"כ הכנסות</div></div>
+      <div class="metric-card"><div class="m-val" id="mCount">-</div><div class="m-lbl">📋 מספר פעולות</div></div>
+      <div class="metric-card"><div class="m-val" id="mTop">-</div><div class="m-lbl">🏆 תופרת מובילה</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-title">הכנסות לפי תופרת</div><div id="chartWorker"></div></div>
+      <div class="card"><div class="card-title">הכנסות לפי סניף</div><div id="chartBranch"></div></div>
+    </div>
+    <div class="card"><div class="card-title">📋 יומן כללי</div><div id="allLogContent"></div></div>
+  </div>
+
+  <div id="tab-manage" class="tab-content">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">👤 הוספת עובדת</div>
+        <div id="addMsg"></div>
+        <div class="field"><label>שם מלא:</label><input type="text" id="nName" placeholder="שם העובדת"></div>
+        <div class="field"><label>סניף:</label><select id="nBranch"><option value="ירושלים">ירושלים</option><option value="בני ברק">בני ברק</option></select></div>
+        <div class="field"><label>סיסמה:</label><input type="text" id="nPass" placeholder="סיסמה"></div>
+        <div class="field"><label>תפקיד:</label><select id="nRole"><option value="עובדת">עובדת</option><option value="ניהול">ניהול</option></select></div>
+        <button class="btn-gold" onclick="doAddWorker()">➕ הוספה</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 רשימת הצוות</div>
+        <div id="staffContent"><div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======================================================
+//  שים כאן את ה-URL של ה-Apps Script שלך
+// ======================================================
+const API = "https://script.google.com/macros/s/AKfycbwWxWichDcZTwSHkuGSvV4FCM1kwJ3CbFF825RNGrp7h9rpiZVRBgORKkscXaMWvlE5/exec";
+// ======================================================
+
+let user = null;
+
+async function api(params) {
+  const res = await fetch(API + "?" + new URLSearchParams(params));
+  return res.json();
+}
+
+window.onload = async function() {
+  try {
+    const names = await api({ action: "getStaff" });
+    const sel = document.getElementById("selName");
+    sel.innerHTML = '<option value="">-- בחרי שם --</option>';
+    names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
+  } catch(e) { document.getElementById("selName").innerHTML = '<option value="">שגיאת חיבור</option>'; }
+};
+
+async function doLogin() {
+  const name = document.getElementById("selName").value;
+  const pass = document.getElementById("inpPass").value;
+  const msg  = document.getElementById("loginMsg");
+  if (!name) { msg.innerHTML = '<div class="msg-err">בחרי שם עובדת</div>'; return; }
+  if (!pass) { msg.innerHTML = '<div class="msg-err">הכניסי סיסמה</div>'; return; }
+  msg.innerHTML = '<div style="text-align:center;padding:8px;color:#888"><span class="loader"></span> מתחברת...</div>';
+  try {
+    const res = await api({ action: "login", name, pass });
+    if (res.ok) { user = res; enterApp(); }
+    else msg.innerHTML = '<div class="msg-err">❌ סיסמה לא נכונה</div>';
+  } catch(e) { msg.innerHTML = '<div class="msg-err">❌ שגיאת חיבור</div>'; }
+}
+
+function enterApp() {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("mainScreen").style.display  = "block";
+  document.getElementById("uName").textContent   = "שלום, " + user.name + " 👋";
+  document.getElementById("uBranch").textContent = "📍 סניף " + user.branch;
+  document.getElementById("uRole").textContent   = user.role === "ניהול" ? "מנהלת" : "עובדת";
+  if (user.role === "ניהול") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
+  loadPrices();
+}
+
+function logout() {
+  user = null;
+  document.getElementById("mainScreen").style.display  = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("inpPass").value = "";
+  document.getElementById("loginMsg").innerHTML = "";
+  document.getElementById("successMsg").innerHTML = "";
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+  document.getElementById("tab-report").classList.add("active");
+  document.querySelectorAll(".tab-btn").forEach((b,i) => b.classList.toggle("active", i===0));
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  btn.classList.add("active");
+  if (name === "mylog")  loadMyLog();
+  if (name === "stats")  loadStats();
+  if (name === "manage") loadStaffTable();
+}
+
+async function loadPrices() {
+  document.getElementById("priceTitle").textContent = "📋 מחירון סניף " + user.branch;
+  document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888"><span class="loader"></span> טוען...</div>';
+  try {
+    const list = await api({ action: "getPrices", branch: user.branch });
+    const grid = document.getElementById("repairGrid");
+    if (!list || !list.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#888">לא נמצאו פריטים</div>'; return; }
+    grid.innerHTML = "";
+    list.forEach(item => {
+      const btn = document.createElement("button");
+      btn.className = "repair-btn";
+      btn.innerHTML = `<div class="r-name">${item.name}</div>${item.price ? `<div class="r-price">₪${item.price}</div>` : ""}`;
+      btn.onclick = () => doRepair(item);
+      grid.appendChild(btn);
+    });
+  } catch(e) { document.getElementById("repairGrid").innerHTML = '<div style="grid-column:1/-1;color:red;padding:10px">שגיאה בטעינת מחירון</div>'; }
+}
+
+async function doRepair(item) {
+  document.querySelectorAll(".repair-btn").forEach(b => { b.disabled = true; b.style.opacity = "0.6"; });
+  try {
+    await api({ action: "logRepair", branch: user.branch, worker: user.name, repair: item.name, price: item.price || "" });
+    const price = item.price ? "₪" + item.price : "";
+    document.getElementById("successMsg").innerHTML = `<div class="success-bubble"><h3>✅ נרשם בהצלחה!</h3><p>${item.name}${price ? " — " + price : ""}</p></div>`;
+    setTimeout(() => document.getElementById("successMsg").innerHTML = "", 3000);
+  } catch(e) {}
+  document.querySelectorAll(".repair-btn").forEach(b => { b.disabled = false; b.style.opacity = "1"; });
+}
+
+async function loadMyLog() {
+  const cont = document.getElementById("myLogContent");
+  cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
+  try {
+    const rows = await api({ action: "getMyLog", worker: user.name });
+    cont.innerHTML = rows && rows.length
+      ? '<div class="tbl-wrap">' + buildTable(["תאריך","סניף","שם","תיקון","מחיר"], rows) + "</div>"
+      : '<div style="text-align:center;padding:20px;color:#888">אין פעולות רשומות עדיין</div>';
+  } catch(e) { cont.innerHTML = '<div class="msg-err">שגיאת חיבור</div>'; }
+}
+
+async function loadStats() {
+  try {
+    const rows = await api({ action: "getAllLog" });
+    if (!rows || !rows.length) return;
+    let total = 0, wMap = {}, bMap = {};
+    rows.forEach(r => { const p = parseFloat(r[4])||0; total+=p; wMap[r[2]]=(wMap[r[2]]||0)+p; bMap[r[1]]=(bMap[r[1]]||0)+p; });
+    document.getElementById("mTotal").textContent = "₪" + total.toLocaleString();
+    document.getElementById("mCount").textContent = rows.length;
+    document.getElementById("mTop").textContent = Object.keys(wMap).sort((a,b)=>wMap[b]-wMap[a])[0]||"-";
+    renderBar("chartWorker", wMap);
+    renderBar("chartBranch", bMap);
+    document.getElementById("allLogContent").innerHTML = '<div class="tbl-wrap">' + buildTable(["תאריך","סניף","תופרת","תיקון","מחיר"], rows.slice(0,50)) + "</div>";
+  } catch(e) {}
+}
+
+function renderBar(id, data) {
+  const keys = Object.keys(data).sort((a,b)=>data[b]-data[a]);
+  const max = data[keys[0]]||1;
+  document.getElementById(id).innerHTML = keys.map(k =>
+    `<div class="bar-row"><div class="bar-lbl">${k}</div><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(data[k]/max*100)}%"><span class="bar-val">₪${data[k].toLocaleString()}</span></div></div></div>`
+  ).join("");
+}
+
+async function loadStaffTable() {
+  const cont = document.getElementById("staffContent");
+  cont.innerHTML = '<div style="text-align:center;padding:20px;color:#888"><span class="loader"></span></div>';
+  try {
+    const rows = await api({ action: "getStaff2" });
+    cont.innerHTML = rows && rows.length
+      ? '<div class="tbl-wrap">' + buildTable(["סניף","שם","תפקיד"], rows.map(r=>[r.branch,r.name,r.role])) + "</div>"
+      : '<div style="padding:10px;color:#888">אין עובדות</div>';
+  } catch(e) {}
+}
+
+async function doAddWorker() {
+  const name=document.getElementById("nName").value.trim(), branch=document.getElementById("nBranch").value,
+        pass=document.getElementById("nPass").value.trim(), role=document.getElementById("nRole").value,
+        msg=document.getElementById("addMsg");
+  if (!name||!pass) { msg.innerHTML='<div class="msg-err">נא למלא שם וסיסמה</div>'; return; }
+  msg.innerHTML='<div style="color:#888"><span class="loader"></span> שומר...</div>';
+  try {
+    await api({ action:"addWorker", branch, name, pass, role });
+    msg.innerHTML='<div class="msg-ok">✅ העובדת נוספה בהצלחה!</div>';
+    document.getElementById("nName").value=""; document.getElementById("nPass").value="";
+    loadStaffTable(); setTimeout(()=>msg.innerHTML="",3000);
+  } catch(e) { msg.innerHTML='<div class="msg-err">שגיאה</div>'; }
+}
+
+function buildTable(headers, rows) {
+  return "<table><tr>"+headers.map(h=>`<th>${h}</th>`).join("")+"</tr>"+
+    rows.map(r=>"<tr>"+r.map(c=>`<td>${c||""}</td>`).join("")+"</tr>").join("")+"</table>";
+}
+</script>
+</body>
+</html>
