@@ -259,11 +259,24 @@ async function doLogin() {
   const msg  = document.getElementById("loginMsg");
   if (!name) { msg.innerHTML = '<div class="msg-err">בחרי שם עובדת</div>'; return; }
   if (!pass) { msg.innerHTML = '<div class="msg-err">הכניסי סיסמה</div>'; return; }
+
+  // בדוק cache של session קודם
+  const sessionKey = "session_" + name;
+  const cached = cacheGet(sessionKey);
+  if (cached && cached.pass === pass) {
+    user = cached.user;
+    enterApp();
+    return;
+  }
+
   msg.innerHTML = '<div style="text-align:center;padding:8px;color:#888"><span class="loader"></span> מתחברת...</div>';
   try {
     const res = await api({ action: "login", name, pass });
-    if (res.ok) { user = res; enterApp(); }
-    else msg.innerHTML = '<div class="msg-err">❌ סיסמה לא נכונה</div>';
+    if (res.ok) {
+      cacheSet(sessionKey, { pass, user: res }, 480); // שמור 8 שעות
+      user = res;
+      enterApp();
+    } else msg.innerHTML = '<div class="msg-err">❌ סיסמה לא נכונה</div>';
   } catch(e) { msg.innerHTML = '<div class="msg-err">❌ שגיאת חיבור</div>'; }
 }
 
@@ -341,13 +354,19 @@ async function loadPrices() {
   }
 }
 
+let repairPending = false;
 function doRepair(item) {
-  // הצג הצלחה מיד — בלי לחכות לגוגל
+  if (repairPending) return; // מנע לחיצה כפולה
+  repairPending = true;
+  setTimeout(() => repairPending = false, 1500);
+
+  // הצג הצלחה מיד
   const price = item.price ? "₪" + item.price : "";
   document.getElementById("successMsg").innerHTML = `<div class="success-bubble"><h3>✅ נרשם בהצלחה!</h3><p>${item.name}${price ? " — " + price : ""}</p></div>`;
   setTimeout(() => document.getElementById("successMsg").innerHTML = "", 3000);
-  myLogLoaded = false; // כדי שיומן יתרענן בפעם הבאה
-  // שלח לגוגל ברקע
+  myLogLoaded = false;
+
+  // שלח לגוגל ברקע — לא מחכים
   api({ action: "logRepair", branch: user.branch, worker: user.name, repair: item.name, price: item.price || "" }).catch(() => {
     document.getElementById("successMsg").innerHTML = '<div class="msg-err">⚠️ שגיאת חיבור — הרישום לא נשמר!</div>';
     setTimeout(() => document.getElementById("successMsg").innerHTML = "", 4000);
