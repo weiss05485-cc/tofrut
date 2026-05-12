@@ -104,7 +104,7 @@ tr:hover td { background: #fdf8ee; }
   <div class="tabs">
     <button class="tab-btn active" onclick="showTab('report',this)">📝 דיווח</button>
     <button class="tab-btn" onclick="showTab('mylog',this)">📜 יומן שלי</button>
-    <button class="tab-btn mgr" onclick="showTab('stats',this)" style="display:none">📊 דוחות</button>
+    <button class="tab-btn mgr acct" onclick="showTab('stats',this)" style="display:none">📊 דוחות</button>
     <button class="tab-btn mgr" onclick="showTab('manage',this)" style="display:none">⚙️ ניהול</button>
   </div>
 
@@ -146,7 +146,7 @@ tr:hover td { background: #fdf8ee; }
         <div class="field"><label>שם מלא:</label><input type="text" id="nName" placeholder="שם העובדת"></div>
         <div class="field"><label>סניף:</label><select id="nBranch"><option value="ירושלים">ירושלים</option><option value="בני ברק">בני ברק</option></select></div>
         <div class="field"><label>סיסמה:</label><input type="text" id="nPass" placeholder="סיסמה"></div>
-        <div class="field"><label>תפקיד:</label><select id="nRole"><option value="עובדת">עובדת</option><option value="ניהול">ניהול</option></select></div>
+        <div class="field"><label>תפקיד:</label><select id="nRole"><option value="עובדת">עובדת</option><option value="ניהול">ניהול</option><option value="הנהלת חשבונות">הנהלת חשבונות</option></select></div>
         <button class="btn-gold" onclick="doAddWorker()">➕ הוספה</button>
       </div>
       <div class="card">
@@ -199,8 +199,9 @@ function enterApp() {
   document.getElementById("mainScreen").style.display  = "block";
   document.getElementById("uName").textContent   = "שלום, " + user.name + " 👋";
   document.getElementById("uBranch").textContent = "📍 סניף " + user.branch;
-  document.getElementById("uRole").textContent   = user.role === "ניהול" ? "מנהלת" : "עובדת";
+  document.getElementById("uRole").textContent   = user.role === "ניהול" ? "מנהלת" : user.role === "הנהלת חשבונות" ? "הנהלת חשבונות" : "עובדת";
   if (user.role === "ניהול") document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
+  if (user.role === "הנהלת חשבונות") document.querySelectorAll(".acct").forEach(el => el.style.display = "");
   loadPrices();
 }
 
