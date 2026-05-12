@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>חסידים סנטר ✂️</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://script.google.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 <style>
@@ -103,7 +104,7 @@ tr:hover td { background: #fdf8ee; }
       <label>סיסמה אישית:</label>
       <input type="password" id="inpPass" placeholder="הכניסי סיסמה..." onkeydown="if(event.key==='Enter') doLogin()">
     </div>
-    <button class="btn-gold" onclick="doLogin()">כניסה למערכת ←</button>
+    <button class="btn-gold" id="loginBtn" onclick="doLogin()">כניסה למערכת ←</button>
   </div>
 </div>
 
@@ -238,20 +239,36 @@ function cacheGet(key) {
 // --- טעינת שמות + pre-warm ---
 window.onload = async function() {
   const sel = document.getElementById("selName");
-  // הצג מ-cache מיד
+  const loginBtn = document.getElementById("loginBtn");
   const cached = cacheGet("staffNames");
   if (cached) {
+    // יש cache — מילוי מיידי, כפתור פעיל
     sel.innerHTML = '<option value="">-- בחרי שם --</option>';
     cached.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
-  }
-  // רענן ברקע — זה גם "מעיר" את Apps Script לפני הכניסה
-  try {
-    const names = await api({ action: "getStaff" });
-    cacheSet("staffNames", names, 120);
-    sel.innerHTML = '<option value="">-- בחרי שם --</option>';
-    names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
-  } catch(e) {
-    if (!cached) sel.innerHTML = '<option value="">שגיאת חיבור</option>';
+    // רענן ברקע בשקט
+    api({ action: "getStaff" }).then(names => {
+      if (names && names.length) {
+        cacheSet("staffNames", names, 120);
+        sel.innerHTML = '<option value="">-- בחרי שם --</option>';
+        names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
+      }
+    }).catch(()=>{});
+  } else {
+    // אין cache — נעל כפתור עד שApp Script מוכן
+    loginBtn.disabled = true;
+    loginBtn.textContent = "⏳ מתחבר לשרת...";
+    sel.innerHTML = '<option value="">טוען...</option>';
+    try {
+      const names = await api({ action: "getStaff" });
+      cacheSet("staffNames", names, 120);
+      sel.innerHTML = '<option value="">-- בחרי שם --</option>';
+      names.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
+    } catch(e) {
+      sel.innerHTML = '<option value="">שגיאת חיבור</option>';
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "כניסה";
+    }
   }
 };
 
