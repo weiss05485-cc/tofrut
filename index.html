@@ -313,6 +313,16 @@ function enterApp() {
     document.querySelectorAll(".mgr").forEach(el => el.style.display = "");
   }
   loadPrices();
+  // טעינה מוקדמת של כל הנתונים ברקע — כך שהטאבים יהיו מיידיים
+  setTimeout(() => {
+    if (!cacheGet("myLog_" + user.name))
+      api({ action: "getMyLog", worker: user.name }).then(r => { if(r) cacheSet("myLog_" + user.name, r, 4); }).catch(()=>{});
+    if (!cacheGet("allLog"))
+      api({ action: "getAllLog" }).then(r => { if(r) cacheSet("allLog", r, 5); }).catch(()=>{});
+    const role = (user.role||"").trim();
+    if ((role === "ניהול" || role === "הנהלת חשבונות") && !cacheGet("staffList"))
+      api({ action: "getStaff2" }).then(r => { if(r) cacheSet("staffList", r, 30); }).catch(()=>{});
+  }, 1500);
 }
 
 function logout() {
